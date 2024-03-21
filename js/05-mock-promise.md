@@ -20,6 +20,27 @@ class PromiseMock {
     });
   }
 
+  static all() {
+    const promiseList = arguments
+
+    return new PromiseMock(function(resolve, reject) {
+      const result = []
+      function fnResolveCallback(value, i) {
+        result.push(value);
+
+        if (result.length === promiseList.length) {
+          resolve(result);
+        }
+      }
+
+      promiseList.forEach((arg, i) => {
+        arg.then(function(value) {
+          fnResolveCallback(value, i);
+        }, reject)
+      })
+    });
+  }
+
   constructor(fn) {
     let that = this;
 
@@ -43,8 +64,9 @@ class PromiseMock {
     const that = this;
     that.status = "rejected";
 
+    let result;
     while(that.rejectCallback.length) {
-      that.rejectCallback.shift().call(that);
+      result = that.rejectCallback.shift().call(that, result);
     }
   }
 
@@ -70,6 +92,7 @@ class PromiseMock {
   catch(fn) {
     this.then(undefined, fn);
   }
+
 }
 
 const pMock = new PromiseMock(function(resolve, reject) {
